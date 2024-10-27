@@ -1,0 +1,202 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Lid {
+  id                Int        @id @default(autoincrement())
+  first_name        String
+  last_name         String
+  phone_number      String
+  test_date         DateTime
+  trial_lesson_date Int
+  trial_lesson_time String
+  LidStatus         LidStatus? @relation(fields: [lid_statusId], references: [id])
+  lid_statusId      Int?
+
+  ReasonLid       ReasonLid? @relation(fields: [cancel_reasonId], references: [id])
+  cancel_reasonId Int?
+
+  student Student[]
+
+  @@map("lid")
+}
+
+model LidStatus {
+  id     Int    @id @default(autoincrement())
+  status String
+  lid    Lid[]
+
+  @@map("lid_status")
+}
+
+model ReasonLid {
+  id         Int    @id @default(autoincrement())
+  reason_lid String
+  Lid        Lid[]
+
+  @@map("reason_lid")
+}
+
+model Branch {
+  id          Int    @id @default(autoincrement())
+  name        String
+  address     String
+  call_number String
+
+  @@map("branch")
+}
+
+model Staff {
+  id                   Int      @id @default(autoincrement())
+  first_name           String
+  last_name            String
+  phone_number         String
+  login                String   @unique
+  hashed_password      String
+  is_active            Boolean? @default(false)
+  hashed_refresh_token String?
+
+  roles StaffRole[]
+
+  group StaffGroup[]
+
+  @@map("staff")
+}
+
+model Role {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  staffs StaffRole[]
+
+  @@map("role")
+}
+
+model StaffRole {
+  staff   Staff @relation(fields: [staffId], references: [id])
+  staffId Int
+
+  role   Role @relation(fields: [roleId], references: [id])
+  roleId Int
+
+  @@id([staffId, roleId])
+  @@map("staff_role")
+}
+
+model Group {
+  id            Int      @id @default(autoincrement())
+  name          String   @unique
+  start_time    String
+  continious    String
+  week_day      String
+  room_number   String
+  room_floor    Int
+  lessons_quant Int
+  is_active     Boolean? @default(false)
+
+  staffs  StaffGroup[]
+  stage   Stage        @relation(fields: [stageId], references: [id])
+  stageId Int
+
+  lesson Lesson[]
+
+  students StudentGroup[]
+
+  @@map("group")
+}
+
+model StaffGroup {
+  staff   Staff @relation(fields: [staffId], references: [id])
+  staffId Int
+
+  group   Group @relation(fields: [groupId], references: [id])
+  groupId Int
+
+  @@id([staffId, groupId])
+  @@map("staff_group")
+}
+
+model Stage {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  Group Group[]
+
+  @@map("stage")
+}
+
+model Payment {
+  id                Int     @id @default(autoincrement())
+  payment_last_date String
+  payment_date      String
+  price             Decimal
+  is_paid           Boolean
+  total_attent      Int
+  studentId         Int
+  student           Student @relation(fields: [studentId], references: [id])
+
+  @@map("payment")
+}
+
+model Student {
+  id           Int      @id @default(autoincrement())
+  first_name   String
+  last_name    String
+  phone_number String   @unique
+  birth_day    DateTime
+  male         String
+
+  lidId Int
+  lid   Lid @relation(fields: [lidId], references: [id])
+
+  payment Payment[]
+
+  lessons StudentLesson[]
+
+  groups StudentGroup[]
+
+  @@map("student")
+}
+
+model StudentGroup {
+  id        Int     @id @default(autoincrement())
+  student   Student @relation(fields: [studentId], references: [id])
+  studentId Int
+
+  group   Group @relation(fields: [groupId], references: [id])
+  groupId Int
+
+  @@map("student_group")
+}
+
+model Lesson {
+  id            Int      @id @default(autoincrement())
+  lesson_theme  String
+  lesson_number Int
+  lesson_date   DateTime
+
+  groupId Int
+  group   Group @relation(fields: [groupId], references: [id])
+
+  students StudentLesson[]
+}
+
+model StudentLesson {
+  id       Int     @id @default(autoincrement())
+  is_thene Boolean
+  reason   String
+  be_paid  Boolean
+
+  student   Student @relation(fields: [studentId], references: [id])
+  studentId Int
+
+  lesson   Lesson @relation(fields: [lessonId], references: [id])
+  lessonId Int
+
+  @@map("student_lesson")
+}
